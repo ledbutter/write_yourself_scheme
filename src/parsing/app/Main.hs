@@ -45,7 +45,13 @@ parseAtom = do
                 _    -> Atom atom
 
 parseNumber :: Parser LispVal
-parseNumber = liftM (Number . read) $ many1 digit
+-- parseNumber = liftM (Number . read) $ many1 digit
+-- 1.1
+parseNumber = do
+                parsedDigits <- many1 digit
+                converted <- return (read (parsedDigits))
+                return $ Number converted
+-- 1.2
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
