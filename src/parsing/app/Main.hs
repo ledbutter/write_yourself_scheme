@@ -44,14 +44,22 @@ parseAtom = do
                 "#f" -> Bool False
                 _    -> Atom atom
 
+myRead :: String -> Parser Integer
+myRead input = return $ read input
+
+what :: Integer -> Parser LispVal
+what input = return $ Number input
+
 parseNumber :: Parser LispVal
 -- parseNumber = liftM (Number . read) $ many1 digit
 -- 1.1
-parseNumber = do
-                parsedDigits <- many1 digit
-                converted <- return (read (parsedDigits))
-                return $ Number converted
+-- parseNumber = do
+--                 parsedDigits <- many1 digit
+--                 let converted = read parsedDigits
+--                 return $ Number converted
 -- 1.2
+--            Parser String
+parseNumber = many1 digit >>= myRead >>= what
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
