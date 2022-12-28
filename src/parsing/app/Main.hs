@@ -7,6 +7,17 @@ import Control.Monad
 symbol :: Parser Char
 symbol = oneOf "!#$%&|*+-/:<=>?@^_~"
 
+escaped :: Parser Char
+escaped = do
+            char '\\'
+            x <- oneOf "\\\"nrt" 
+            return $ case x of 
+                '\\' -> x
+                '"'  -> x
+                'n'  -> '\n'
+                'r'  -> '\r'
+                't'  -> '\t'
+
 readExpr :: String -> String
 readExpr input = case parse parseExpr "lisp" input of
     Left err -> "No match: " ++ show err
@@ -30,7 +41,8 @@ data LispVal = Atom String
 parseString :: Parser LispVal
 parseString = do
                 char '"'
-                x <- many (noneOf "\"")
+                -- original: x <- many (noneOf "\"")
+                x <- many $ escaped <|> noneOf "\"\\"
                 char '"'
                 return $ String x
 
@@ -44,11 +56,11 @@ parseAtom = do
                 "#f" -> Bool False
                 _    -> Atom atom
 
-myRead :: String -> Parser Integer
-myRead input = return $ read input
+readParser :: String -> Parser Integer
+readParser input = return $ read input
 
-what :: Integer -> Parser LispVal
-what input = return $ Number input
+numberParser :: Integer -> Parser LispVal
+numberParser input = return $ Number input
 
 parseNumber :: Parser LispVal
 -- parseNumber = liftM (Number . read) $ many1 digit
@@ -58,8 +70,8 @@ parseNumber :: Parser LispVal
 --                 let converted = read parsedDigits
 --                 return $ Number converted
 -- 1.2
---            Parser String
-parseNumber = many1 digit >>= myRead >>= what
+-- todo: can i do this without intermediate functions?
+parseNumber = many1 digit >>= readParser >>= numberParser
 
 parseExpr :: Parser LispVal
 parseExpr = parseAtom
